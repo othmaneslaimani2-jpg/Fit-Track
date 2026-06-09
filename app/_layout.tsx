@@ -10,8 +10,10 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 export default function RootLayout() {
   const [isVideoFinished, setIsVideoFinished] = useState(false);
   const [loaded, error] = useFonts({
-    'Aekiy Kagon': require('../assets/fonts/Aekiy Kagon.otf'),
-    'google-sans-bold': require('../assets/fonts/google-sans-bold.ttf'),
+    'Duitech': require('../assets/fonts/Duitech.otf'),
+    'NettRanego': require('../assets/fonts/NettRanego.ttf'),
+    'SANSSULEX': require('../assets/fonts/SANSSULEX.ttf'),
+
   });
     useEffect(() => {
     if (loaded || error) {
