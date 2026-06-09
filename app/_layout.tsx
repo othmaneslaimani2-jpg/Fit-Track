@@ -1,13 +1,23 @@
 import { Stack } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Video, ResizeMode } from "expo-av";
 import { View, StyleSheet } from "react-native";
 import * as SplashScreen from 'expo-splash-screen';
+import { useFonts } from 'expo-font';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
   const [isVideoFinished, setIsVideoFinished] = useState(false);
+  const [loaded, error] = useFonts({
+    'Aekiy Kagon': require('../assets/fonts/Aekiy Kagon.otf'),
+    'google-sans-bold': require('../assets/fonts/google-sans-bold.ttf'),
+  });
+    useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync();
+    }  }, [loaded, error]);
+
 
   if (!isVideoFinished) {
     return (
