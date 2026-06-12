@@ -37,6 +37,18 @@
             "backgroundColor": "#0c1013"
           }
         }
+      ],
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "Allow Fit-Track to access your device motion for step counting."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Fit-Track to use your location for running maps."
+        }
       ]
     ],
     "experiments": {

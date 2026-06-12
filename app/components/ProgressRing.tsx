@@ -13,10 +13,10 @@ interface ProgressRingProps {
     children?: React.ReactNode;
 } 
 export default function ProgressRing({
-    radius = 60,
-    strokeWidth = 12,
+    radius = 110,
+    strokeWidth = 18,
     progress = 0.75,
-    color = '#70e000',
+    color = '#c6ff00',
     children,
 }: ProgressRingProps) {
     const innerRadius = radius - strokeWidth / 2;
@@ -30,39 +30,56 @@ export default function ProgressRing({
             })
         );
     }, [progress]);
-const animatedProps = useAnimatedProps(() => {
-    const strokeDashoffset = circumference - (circumference * animatedProgress.value);
-    return { strokeDashoffset };
-});
-return (
-    <View style={{ width: radius * 2, height: radius *2, justifyContent: 'center', alignItems: 'center' }}>
-        <Svg width={radius * 2} height={radius * 2} style={{ position: 'absolute' }}>
-        
-        
-        <Circle
-          cx={radius}
-          cy={radius}
-          r={innerRadius}
-          stroke="#1e2428" 
-          strokeWidth={strokeWidth}
-          fill="none"
-        />
-        
-        
-        <AnimatedCircle
-          cx={radius}
-          cy={radius}
-          r={innerRadius}
-          stroke={color}
-          strokeWidth={strokeWidth}
-          fill="none"
-          strokeDasharray={circumference}
-          animatedProps={animatedProps}
-          strokeLinecap="round" 
-          transform={`rotate(-90 ${radius} ${radius})`}
-        />
-      </Svg>
-      {children}
-    </View>
-);
+
+    const animatedProps = useAnimatedProps(() => {
+        const strokeDashoffset = circumference - (circumference * animatedProgress.value);
+        return { strokeDashoffset };
+    });
+
+    return (
+        <View style={{ width: radius * 2, height: radius * 2, justifyContent: 'center', alignItems: 'center' }}>
+            <Svg width={radius * 2} height={radius * 2} style={{ position: 'absolute' }}>
+                
+
+                <Circle
+                  cx={radius}
+                  cy={radius}
+                  r={innerRadius}
+                  stroke="#1c1c1e" 
+                  strokeWidth={strokeWidth}
+                  fill="none"
+                />
+                
+
+                <AnimatedCircle
+                  cx={radius}
+                  cy={radius}
+                  r={innerRadius}
+                  stroke={color}
+                  strokeWidth={strokeWidth + 12}
+                  fill="none"
+                  strokeOpacity={0.15}
+                  strokeDasharray={circumference}
+                  animatedProps={animatedProps}
+                  strokeLinecap="round" 
+                  transform={`rotate(-90 ${radius} ${radius})`}
+                />
+
+
+                <AnimatedCircle
+                  cx={radius}
+                  cy={radius}
+                  r={innerRadius}
+                  stroke={color}
+                  strokeWidth={strokeWidth}
+                  fill="none"
+                  strokeDasharray={circumference}
+                  animatedProps={animatedProps}
+                  strokeLinecap="round" 
+                  transform={`rotate(-90 ${radius} ${radius})`}
+                />
+            </Svg>
+            {children}
+        </View>
+    );
 }

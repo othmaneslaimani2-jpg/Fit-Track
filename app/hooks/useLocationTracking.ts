@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import * as Location from 'expo-location';
 
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371e3;
-  const toRadians = (deg: number) => (deg * Math.PI) / 180;
+function calculateDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const EARTH_RADIUS_IN_METERS = 6371e3;
+  const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
   
   const dLat = toRadians(lat2 - lat1);
   const dLon = toRadians(lon2 - lon1);
@@ -14,16 +14,18 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
     
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+  return EARTH_RADIUS_IN_METERS * c;
 }
 
 export function useLocationTracking() {
-  const [locations, setLocations] = useState<Location.LocationObject[]>([]);
-  const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
   const [isTracking, setIsTracking] = useState(false);
   const [distance, setDistance] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [subscription, setSubscription] = useState<Location.LocationSubscription | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
+  const [routeCoordinates, setRouteCoordinates] = useState<{latitude: number, longitude: number}[]>([]);
+  
+  const subscriptionRef = useRef<Location.LocationSubscription | null>(null);
+  const lastLocationRef = useRef<Location.LocationObject | null>(null);
 
   const startTracking = useCallback(async () => {
     try {
@@ -34,11 +36,13 @@ export function useLocationTracking() {
       }
 
       setErrorMsg(null);
-      setIsTracking(true);
-      setLocations([]);
       setDistance(0);
+      setCurrentLocation(null);
+      setRouteCoordinates([]);
+      lastLocationRef.current = null;
+      setIsTracking(true);
 
-      const sub = await Location.watchPositionAsync(
+      subscriptionRef.current = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High, 
           timeInterval: 2000,
@@ -46,53 +50,57 @@ export function useLocationTracking() {
         },
         (newLocation) => {
           setCurrentLocation(newLocation);
+          const newCoord = {
+            latitude: newLocation.coords.latitude,
+            longitude: newLocation.coords.longitude
+          };
+
+          if (lastLocationRef.current) {
+            const distanceMoved = calculateDistanceInMeters(
+              lastLocationRef.current.coords.latitude,
+              lastLocationRef.current.coords.longitude,
+              newLocation.coords.latitude,
+              newLocation.coords.longitude
+            );
+            
+            setDistance((prevTotal) => prevTotal + distanceMoved);
+          }
           
-          setLocations((prevLocations) => {
-            if (prevLocations.length > 0) {
-              const lastLoc = prevLocations[prevLocations.length - 1];
-              const distToAdd = calculateDistance(
-                lastLoc.coords.latitude,
-                lastLoc.coords.longitude,
-                newLocation.coords.latitude,
-                newLocation.coords.longitude
-              );
-              setDistance((prevDist) => prevDist + distToAdd);
-            }
-            return [...prevLocations, newLocation];
-          });
+          setRouteCoordinates((prev) => [...prev, newCoord]);
+          lastLocationRef.current = newLocation;
         }
       );
 
-      setSubscription(sub);
     } catch (err) {
+      console.error(err);
       setErrorMsg('Failed to start location tracking');
       setIsTracking(false);
     }
   }, []);
 
   const stopTracking = useCallback(() => {
-    if (subscription) {
-      subscription.remove();
-      setSubscription(null);
+    if (subscriptionRef.current) {
+      subscriptionRef.current.remove();
+      subscriptionRef.current = null;
     }
     setIsTracking(false);
-  }, [subscription]);
+  }, []);
 
   useEffect(() => {
     return () => {
-      if (subscription) {
-        subscription.remove();
+      if (subscriptionRef.current) {
+        subscriptionRef.current.remove();
       }
     };
-  }, [subscription]);
+  }, []);
 
   return {
     startTracking,
     stopTracking,
     isTracking,
-    currentLocation,
-    locations,
     distance,
+    currentLocation,
+    routeCoordinates,
     errorMsg
   };
 }
